@@ -1,0 +1,414 @@
+// Dry CO2 composition control dor dynamic testing
+
+at (time + 600)
+
+    start_time = time
+
+    message("Dynamic case 1 started")
+
+    oldSP = {02QIC001:InternalSetpoint}
+    newSP = oldSP * 1.17
+    {02QIC001:InternalSetpoint} = newSP
+
+    while (time < start_time + 240.0 * 60.0)
+
+        t_now = (time - start_time) / 60.0
+
+        if (t_now <= 2.5)
+            t1 = 0.0
+            t2 = 2.5
+            f1 = 3.20
+            f2 = 3.40
+
+        elseif (t_now <= 5.9)
+            t1 = 2.5
+            t2 = 5.9
+            f1 = 3.40
+            f2 = 3.15
+
+        elseif (t_now <= 12.0)
+            t1 = 5.9
+            t2 = 12.0
+            f1 = 3.15
+            f2 = 3.40
+
+        elseif (t_now <= 20.0)
+            t1 = 12.0
+            t2 = 20.0
+            f1 = 3.40
+            f2 = 4.30
+
+        elseif (t_now <= 24.0)
+            t1 = 20.0
+            t2 = 24.0
+            f1 = 4.30
+            f2 = 5.15
+
+        elseif (t_now <= 26.0)
+            t1 = 24.0
+            t2 = 26.0
+            f1 = 5.15
+            f2 = 5.15
+
+        elseif (t_now <= 28.0)
+            t1 = 26.0
+            t2 = 28.0
+            f1 = 5.15
+            f2 = 4.80
+
+        elseif (t_now <= 32.0)
+            t1 = 28.0
+            t2 = 32.0
+            f1 = 4.80
+            f2 = 5.00
+
+        elseif (t_now <= 34.0)
+            t1 = 32.0
+            t2 = 34.0
+            f1 = 5.00
+            f2 = 4.80
+
+        elseif (t_now <= 40.0)
+            t1 = 34.0
+            t2 = 40.0
+            f1 = 4.80
+            f2 = 5.55
+
+        elseif (t_now <= 45.0)
+            t1 = 40.0
+            t2 = 45.0
+            f1 = 5.55
+            f2 = 7.35
+
+        elseif (t_now <= 50.0)
+            t1 = 45.0
+            t2 = 50.0
+            f1 = 7.35
+            f2 = 8.50
+
+        elseif (t_now <= 54.0)
+            t1 = 50.0
+            t2 = 54.0
+            f1 = 8.50
+            f2 = 8.85
+
+        elseif (t_now <= 59.0)
+            t1 = 54.0
+            t2 = 59.0
+            f1 = 8.85
+            f2 = 8.60
+
+        elseif (t_now <= 62.0)
+            t1 = 59.0
+            t2 = 62.0
+            f1 = 8.60
+            f2 = 8.70
+
+        elseif (t_now <= 66.0)
+            t1 = 62.0
+            t2 = 66.0
+            f1 = 8.70
+            f2 = 8.48
+
+        elseif (t_now <= 70.0)
+            t1 = 66.0
+            t2 = 70.0
+            f1 = 8.48
+            f2 = 8.67
+
+        elseif (t_now <= 75.0)
+            t1 = 70.0
+            t2 = 75.0
+            f1 = 8.67
+            f2 = 8.68
+
+        elseif (t_now <= 80.0)
+            t1 = 75.0
+            t2 = 80.0
+            f1 = 8.68
+            f2 = 8.60
+
+        elseif (t_now <= 85.0)
+            t1 = 80.0
+            t2 = 85.0
+            f1 = 8.60
+            f2 = 8.46
+
+        elseif (t_now <= 90.0)
+            t1 = 85.0
+            t2 = 90.0
+            f1 = 8.46
+            f2 = 8.15
+
+        elseif (t_now <= 94.0)
+            t1 = 90.0
+            t2 = 94.0
+            f1 = 8.15
+            f2 = 8.20
+
+        elseif (t_now <= 97.0)
+            t1 = 94.0
+            t2 = 97.0
+            f1 = 8.20
+            f2 = 8.45
+
+        elseif (t_now <= 100.0)
+            t1 = 97.0
+            t2 = 100.0
+            f1 = 8.45
+            f2 = 8.50
+
+        elseif (t_now <= 104.0)
+            t1 = 100.0
+            t2 = 104.0
+            f1 = 8.50
+            f2 = 8.30
+
+        elseif (t_now <= 110.0)
+            t1 = 104.0
+            t2 = 110.0
+            f1 = 8.30
+            f2 = 7.60
+
+        elseif (t_now <= 115.0)
+            t1 = 110.0
+            t2 = 115.0
+            f1 = 7.60
+            f2 = 7.05
+
+        elseif (t_now <= 117.0)
+            t1 = 115.0
+            t2 = 117.0
+            f1 = 7.05
+            f2 = 7.00
+
+        elseif (t_now <= 120.0)
+            t1 = 117.0
+            t2 = 120.0
+            f1 = 7.00
+            f2 = 7.10
+
+        elseif (t_now <= 123.0)
+            t1 = 120.0
+            t2 = 123.0
+            f1 = 7.10
+            f2 = 7.10
+
+        elseif (t_now <= 128.0)
+            t1 = 123.0
+            t2 = 128.0
+            f1 = 7.10
+            f2 = 6.80
+
+        elseif (t_now <= 130.0)
+            t1 = 128.0
+            t2 = 130.0
+            f1 = 6.80
+            f2 = 6.90
+
+        elseif (t_now <= 134.0)
+            t1 = 130.0
+            t2 = 134.0
+            f1 = 6.90
+            f2 = 7.75
+
+        elseif (t_now <= 137.0)
+            t1 = 134.0
+            t2 = 137.0
+            f1 = 7.75
+            f2 = 8.60
+
+        elseif (t_now <= 140.0)
+            t1 = 137.0
+            t2 = 140.0
+            f1 = 8.60
+            f2 = 9.00
+
+        elseif (t_now <= 142.0)
+            t1 = 140.0
+            t2 = 142.0
+            f1 = 9.00
+            f2 = 9.00
+
+        elseif (t_now <= 147.0)
+            t1 = 142.0
+            t2 = 147.0
+            f1 = 9.00
+            f2 = 8.14
+
+        elseif (t_now <= 151.0)
+            t1 = 147.0
+            t2 = 151.0
+            f1 = 8.14
+            f2 = 7.90
+
+        elseif (t_now <= 163.0)
+            t1 = 151.0
+            t2 = 163.0
+            f1 = 7.90
+            f2 = 7.40
+
+        elseif (t_now <= 167.0)
+            t1 = 163.0
+            t2 = 167.0
+            f1 = 7.40
+            f2 = 7.50
+
+        elseif (t_now <= 172.0)
+            t1 = 167.0
+            t2 = 172.0
+            f1 = 7.50
+            f2 = 7.27
+
+        elseif (t_now <= 174.0)
+            t1 = 172.0
+            t2 = 174.0
+            f1 = 7.27
+            f2 = 7.27
+
+        elseif (t_now <= 179.0)
+            t1 = 174.0
+            t2 = 179.0
+            f1 = 7.27
+            f2 = 7.70
+
+        elseif (t_now <= 183.0)
+            t1 = 179.0
+            t2 = 183.0
+            f1 = 7.70
+            f2 = 7.75
+
+        elseif (t_now <= 185.0)
+            t1 = 183.0
+            t2 = 185.0
+            f1 = 7.75
+            f2 = 8.00
+
+        elseif (t_now <= 187.0)
+            t1 = 185.0
+            t2 = 187.0
+            f1 = 8.00
+            f2 = 8.35
+
+        elseif (t_now <= 190.0)
+            t1 = 187.0
+            t2 = 190.0
+            f1 = 8.35
+            f2 = 8.60
+
+        elseif (t_now <= 194.0)
+            t1 = 190.0
+            t2 = 194.0
+            f1 = 8.60
+            f2 = 8.60
+
+        elseif (t_now <= 200.0)
+            t1 = 194.0
+            t2 = 200.0
+            f1 = 8.60
+            f2 = 7.90
+
+        elseif (t_now <= 204.0)
+            t1 = 200.0
+            t2 = 204.0
+            f1 = 7.90
+            f2 = 7.53
+
+        elseif (t_now <= 206.0)
+            t1 = 204.0
+            t2 = 206.0
+            f1 = 7.53
+            f2 = 7.40
+
+        elseif (t_now <= 211.0)
+            t1 = 206.0
+            t2 = 211.0
+            f1 = 7.40
+            f2 = 6.90
+
+        elseif (t_now <= 215.0)
+            t1 = 211.0
+            t2 = 215.0
+            f1 = 6.90
+            f2 = 7.05
+
+        elseif (t_now <= 217.0)
+            t1 = 215.0
+            t2 = 217.0
+            f1 = 7.05
+            f2 = 7.20
+
+        elseif (t_now <= 220.0)
+            t1 = 217.0
+            t2 = 220.0
+            f1 = 7.20
+            f2 = 7.44
+
+        elseif (t_now <= 225.0)
+            t1 = 220.0
+            t2 = 225.0
+            f1 = 7.44
+            f2 = 7.47
+
+        elseif (t_now <= 230.0)
+            t1 = 225.0
+            t2 = 230.0
+            f1 = 7.47
+            f2 = 7.55
+
+        elseif ( 235.0)
+            t1 = 230.0
+            t2 = 235.0
+            f1 = 7.55
+            f2 = 7.60
+
+        else
+            t1 = 235.0
+            t2 = 240.0
+            f1 = 7.60
+            f2 = 7.55
+        end
+
+        if (t2 > t1)
+            frac = (t_now - t1) / (t2 - t1)
+        else
+            frac = 0.0
+        end
+
+        if (frac < 0.0)
+            frac = 0.0
+        end
+
+        if (frac > 1.0)
+            frac = 1.0
+        end
+
+        dry_percent = f1 + (f2 - f1) * frac
+
+        xw   = {FlueGasInn:InputComposition[0]}
+        xco2 = {FlueGasInn:InputComposition[4]}
+        xn2  = {FlueGasInn:InputComposition[3]}
+
+        total = xw + xco2 + xn2
+        dry   = total - xw
+
+        if (dry <= 1e-12)
+            abort
+        end
+
+        xco2_new = (dry_percent / 100.0) * dry
+        xn2_new  = dry - xco2_new
+
+        if (xn2_new < 0.0)
+            abort
+        end
+
+        {FlueGasInn:InputComposition[4]} = xco2_new
+        {FlueGasInn:InputComposition[3]} = xn2_new
+
+    end
+
+    message("Dynamic case 1 ended")
+    SetSpeed(1)
+
+end

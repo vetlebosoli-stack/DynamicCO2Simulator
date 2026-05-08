@@ -1,0 +1,74 @@
+// ====================================================================
+// CASE 2 v6
+// CONTROLLER SETPOINT CHANGING SCRIPT 
+// ====================================================================
+// This script explicitly sets controller setpoints at script execution.
+// ====================================================================
+
+// Gas Flow Rate 00FIC001 / FT06
+message("; 00FIC001 ; Setpoint update ; Applying InternalSetpoint")
+{00FIC001:InternalSetpoint} = 90.09
+
+
+// Lean Solvent Flow Rate in
+message("; 00FC001 ; Setpoint update ; Applying InternalSetpoint")
+{00FC001:InternalSetpoint} = 172.3
+
+
+// Temperature Lean Solvent LeanMEA_inn and 02TIC002 / TA08
+message("; 02TIC002 ; Setpoint update ; Applying InternalSetpoint")
+{02TIC002:InternalSetpoint} = 58.31
+message("; LeanMEA_inn ; Temperature update ; Applying New Temperature")
+{LeanMEA_inn:InstructorTemperature} = 58.31
+
+
+// Reboiler Duty
+message("; 02QIC001 ; Setpoint update ; Applying InternalSetpoint")
+{02QIC001:InternalSetpoint} = 9.2
+
+
+// Absorber Inlet CO2
+message("; FlueGasInn ; Composition update ; Applying New Compositions")
+// Water:
+{FlueGasInn:InputComposition[3]} = 3.8
+// Nitrogen:
+{FlueGasInn:InputComposition[3]} = 89.13
+// CO2 corrected to be dry%:
+{FlueGasInn:InputComposition[4]} = 7.07
+// Temperature: 00TIC000 / TAB
+message("; 00TIC000 ; Temperature update ; Applying New Temperature")
+{00TIC000:InternalSetpoint} = 49.24
+// Pressure: 00PIC001 / TAB
+
+
+// CO2 Loading Lean (0.26)
+message("; LeanMEA_inn ; Composition update ; Applying New Compositions")
+// Water:
+{LeanMEA_inn:InstructorCompositionVector[0]} = 86.2611
+// FreeMEA
+{LeanMEA_inn:InstructorCompositionVector[1]} = 10.9039
+// CO2InMEA
+{LeanMEA_inn:InstructorCompositionVector[2]} = 2.835
+
+
+// Pressure in absorber 00PIC002 / PI_100
+message("; 00PIC002 ; Setpoint update ; Applying InternalSetpoint")
+{00PIC002:InternalSetpoint} = 1002.74
+
+
+// Pressure in reboiler 04PIC001 / PT02
+message("; 04PIC001 ; Setpoint update ; Applying InternalSetpoint")
+{04PIC001:InternalSetpoint} = 0.90
+
+// EX03 cooling loop 03TIC001 / TT01
+message("; 03TIC001 ; Setpoint update ; Applying InternalSetpoint")
+{03TIC001:InternalSetpoint} = 30.64
+
+// EX04 cooling loop 04TIC001 / TT02
+message("; 04TIC001 ; Setpoint update ; Applying InternalSetpoint")
+{04TIC001:InternalSetpoint} = 25.01
+
+
+message("; ; ; All controller setpoints applied")
+
+end 
