@@ -1,4 +1,6 @@
-// Dry CO2 composition control for dynamic testing
+// This script runs a dynamic test that performs a step change and matches dry CO2 composition in flue gas. 
+// Run simulator to steady state in case 2, then execute this script.
+// Script does not stop after 240 minutes, but changes simulator speed to 1x.
 
 at (time + 600)
 

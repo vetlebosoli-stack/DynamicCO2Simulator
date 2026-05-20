@@ -3,11 +3,18 @@
 Created on Tue May  5 00:07:15 2026
 
 @author: vetle
+
+This script is made to genereate plots, and calculate results for dynamic 
+testing af a CCS-simulator modeled in K-Spice
+
+Thsi script is a copy of the main script, altered to handle seperate data.
+
 """
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 os.makedirs("plotsCL", exist_ok=True)
 
@@ -30,6 +37,44 @@ def GetSingleSensorData(df, tag, index):
         if df.iloc[32, col] == tag:
             return df.iloc[index, col]
     return None
+
+def CalculateRMSE(figNum, time1, values1, time2, values2):    
+    """
+    RMSE between two series with different sampling time
+    
+    Series2 is interpolated to the timeseries of series1. 
+    only overlapping time is used for calculation
+    
+    series1 is real data, series 2 is simulator data
+    """
+
+    time1 = np.asarray(time1, dtype=float)
+    values1 = np.asarray(values1, dtype=float)
+
+    time2 = np.asarray(time2, dtype=float)
+    values2 = np.asarray(values2, dtype=float)
+
+    # Finn overlappende tidsområde
+    t_min = max(time1.min(), time2.min())
+    t_max = min(time1.max(), time2.max())
+
+    # Begrens til overlappende område
+    mask1 = (time1 >= t_min) & (time1 <= t_max)
+
+    time1_overlap = time1[mask1]
+    values1_overlap = values1[mask1]
+
+    # Interpoler serie 2 til serie 1 sine tidspunkter
+    values2_interp = np.interp(time1_overlap, time2, values2)
+    
+    # RMSE
+    RMSE = np.sqrt(np.mean((values1_overlap - values2_interp) ** 2))
+    print(f"RMSE for fig {figNum} = {RMSE:.4f}")
+
+    NRMSE = RMSE / (values1_overlap.max())
+    print(f"NRMSE for fig {figNum} = {NRMSE:.2%}")
+   
+    return RMSE, NRMSE
 
 readFromFile = "DynamicValidation.xlsx"
 
@@ -118,12 +163,16 @@ pilotCO2Input_CO2 = pilotCO2Input["co2"]
 kSpiceCO2Input_time, kSpiceCO2Input_CO2 = GetSensorData(df_case1CL, "GasToAbsorber:OutputCompositionVector[4]")
 kSpiceCO2Input_CO2 = (kSpiceCO2Input_CO2/96.2)*100 #kompensasjon for 3.8% vann
 
+#Calculate RMSE
+fig5CLRMSE = CalculateRMSE("5CL", pilotCO2Input_time, pilotCO2Input_CO2, kSpiceCO2Input_time, kSpiceCO2Input_CO2)
+
+#plot
 plt.figure(figsize=(12, 7))
 plt.plot(pilotCO2Input_time, pilotCO2Input_CO2,
             linestyle='--',
             linewidth=2,
             color='black',
-            label='Pilot')
+            label='Pilot - Enaasen Flø et al. (2015)')
 
 plt.plot(kSpiceCO2Input_time, kSpiceCO2Input_CO2,
             linestyle='-',
@@ -132,7 +181,7 @@ plt.plot(kSpiceCO2Input_time, kSpiceCO2Input_CO2,
             label='K-Spice - Lukket sløyfe')
 
 plt.xlabel("Tid [min]")
-plt.ylabel("Absorber Innløp CO2 [dry vol%]")
+plt.ylabel("Absorber Innløp CO2-konsentrasjon [dry vol%]")
 plt.xlim(0, 245)
 plt.ylim(0, 10)
 plt.legend()
@@ -148,13 +197,16 @@ pilotCO2Output_CO2 = pilotCO2Output["co2"]
 kSpiceCO2Output_time, kSpiceCO2Output_CO2 = GetSensorData(df_case1CL, "GasFromAbsorber:OutputCompositionVector[4]")
 kSpiceCO2Output_CO2 = (kSpiceCO2Output_CO2/96.2)*100 #kompensasjon for 3.8% vann
 
+#Calculate RMSE
+fig6CLRMSE = CalculateRMSE("6CL", pilotCO2Output_time, pilotCO2Output_CO2, kSpiceCO2Output_time, kSpiceCO2Output_CO2)
 
+#plot
 plt.figure(figsize=(12, 7))
 plt.plot(pilotCO2Output_time, pilotCO2Output_CO2,
             linestyle='--',
             linewidth=2,
             color='black',
-            label='Pilot')
+            label='Pilot - Enaasen Flø et al. (2015)')
 
 plt.plot(kSpiceCO2Output_time, kSpiceCO2Output_CO2,
             linestyle='-',
@@ -163,7 +215,7 @@ plt.plot(kSpiceCO2Output_time, kSpiceCO2Output_CO2,
             label='K-Spice - Lukket sløyfe')
 
 plt.xlabel("Tid [min]")
-plt.ylabel("Absorber utløp CO2 [dry vol%]")
+plt.ylabel("Absorber utløp CO2-konsentrasjon [dry vol%]")
 plt.xlim(0, 245)
 plt.ylim(0, 4.5)
 plt.legend()
@@ -193,6 +245,12 @@ pilotCO2DensityB_Loading = pilotCO2DensityB["richLoading"]
 
 kSpiceRichLoading_time, kSpiceRichLoading_Loading = GetSensorData(df_case1CL, "RAL:Output")
 
+#Calculate RMSE
+fig7aCLRMSE = CalculateRMSE("7aCL", pilotCO2DensityA_time, pilotCO2DensityA_Loading, kSpiceLeanLoadingIn_time, kSpiceLeanLoadingIn_Loading)
+
+#Calculate RMSE
+fig7bCLRMSE = CalculateRMSE("7bCL", pilotCO2DensityB_time, pilotCO2DensityB_Loading, kSpiceRichLoading_time, kSpiceRichLoading_Loading)
+
 # Plot fig7
 fig, axes = plt.subplots(1, 2, figsize=(22, 7))
 
@@ -201,16 +259,16 @@ axes[0].scatter(pilotCO2AnalysisLean_time, pilotCO2AnalysisLean_Loading,
                 marker='o',
                 facecolors="none",
                 color='black',
-                label='Pilot - Analyse')
+                label='Pilot - Analyse - Enaasen Flø et al. (2015)')
 
 axes[0].plot(pilotCO2DensityA_time, pilotCO2DensityA_Loading,
              linestyle='--',
              linewidth=2,
              color='black',
-             label='Pilot - Tetthet')
+             label='Pilot - Tetthet - Enaasen Flø et al. (2015)')
 
 axes[0].plot(kSpiceLeanLoadingIn_time, kSpiceLeanLoadingIn_Loading,
-             linestyle='dotted',
+             linestyle='-',
              linewidth=2,
              color='black',
              label='K-Spice - Lukket sløyfe - Inn i absorber')
@@ -218,7 +276,7 @@ axes[0].plot(kSpiceLeanLoadingIn_time, kSpiceLeanLoadingIn_Loading,
 axes[0].set_xlabel("Tid [min]")
 axes[0].set_ylabel("Lean loading [molCO2/molMEA]")
 axes[0].set_xlim(0, 245)
-axes[0].set_ylim(0, 0.4)
+axes[0].set_ylim(0, 0.55)
 axes[0].legend()
 axes[0].set_title("a)", loc="left")
 
@@ -227,13 +285,13 @@ axes[1].scatter(pilotCO2AnalysisRich_time, pilotCO2AnalysisRich_Loading,
                 marker='o',
                 facecolors="none",
                 color='black',
-                label='Pilot - Analyse')
+                label='Pilot - Analyse - Enaasen Flø et al. (2015)')
 
 axes[1].plot(pilotCO2DensityB_time, pilotCO2DensityB_Loading,
              linestyle='--',
              linewidth=2,
              color='black',
-             label='Pilot - Tetthet')
+             label='Pilot - Tetthet - Enaasen Flø et al. (2015)')
 
 axes[1].plot(kSpiceRichLoading_time, kSpiceRichLoading_Loading,
              linestyle='-',
@@ -274,6 +332,8 @@ pilotDesorbedCO2_time = pilotDesorbedCO2["time"]
 pilotDesorbedCO2_CO2 = pilotDesorbedCO2["co2"]
 
 '''
+Missing dataseries required for calculating desorbed CO2
+
 kSpiceDesorbedCO2_time = GetOnlySensorData(df_case1CL, "AdjustedTime")
 kSpiceDesorbedCO2_molIn = GetOnlySensorData(df_case1CL, "RichAmine:OutletStream.m")
 kSpiceDesorbedCO2_CO2PercentInL = GetOnlySensorData(df_case1CL, "RichAmine:OutputCompositionVector[2]")
@@ -284,6 +344,13 @@ kSpiceDesorbedCO2_CO2PercentOutL = GetOnlySensorData(df_case1CL, "LeanAmine:Outp
 kSpiceDesorbedCO2_CO2 = (kSpiceDesorbedCO2_molIn*((kSpiceDesorbedCO2_CO2PercentInL + kSpiceDesorbedCO2_CO2PercentInG)/100) - (kSpiceDesorbedCO2_molOut*(kSpiceDesorbedCO2_CO2PercentOutG + kSpiceDesorbedCO2_CO2PercentOutL)/100))/1000
 
 '''
+
+#Calculate RMSE
+fig8aCLRMSE = CalculateRMSE("8aCL", pilotAbsorbedCO2_time, pilotAbsorbedCO2_CO2, kSpiceAbsorbedCO2_time, kSpiceAbsorbedCO2_CO2)
+
+#Calculate RMSE
+#fig8bCLRMSE = CalculateRMSE("8bCL", pilotDesorbedCO2_time, pilotDesorbedCO2_CO2, kSpiceDesorbedCO2_time, kSpiceDesorbedCO2_CO2)
+
 # Plot fig8
 fig, axes = plt.subplots(1, 2, figsize=(22, 7))
 
@@ -292,7 +359,7 @@ axes[0].plot(pilotAbsorbedCO2_time, pilotAbsorbedCO2_CO2,
              linestyle='--',
              linewidth=2,
              color='black',
-             label='Pilot')
+             label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[0].plot(kSpiceAbsorbedCO2_time, kSpiceAbsorbedCO2_CO2,
              linestyle='-',
@@ -301,7 +368,7 @@ axes[0].plot(kSpiceAbsorbedCO2_time, kSpiceAbsorbedCO2_CO2,
              label='K-Spice')
 
 axes[0].set_xlabel("Tid [min]")
-axes[0].set_ylabel("Absorbert CO2 [kmol/h]")
+axes[0].set_ylabel("Absorbert CO2 i absorber [kmol/h]")
 axes[0].set_xlim(0, 245)
 axes[0].set_ylim(0, 0.35)
 axes[0].legend()
@@ -312,21 +379,21 @@ axes[1].plot(pilotDesorbedCO2_time, pilotDesorbedCO2_CO2,
              linestyle='--',
              linewidth=2,
              color='black',
-             label='Pilot')
+             label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[1].plot(kSpiceDesorbedCO2_time, kSpiceDesorbedCO2_CO2,
              linestyle='-',
              linewidth=2,
              color='black',
              label='K-Spice')
-
+'''
 axes[1].set_xlabel("Tid [min]")
-axes[1].set_ylabel("Desorbert CO2 [kmol/h]")
+axes[1].set_ylabel("Desorbert CO2 i stripper [kmol/h]")
 axes[1].set_xlim(0, 245)
-axes[1].set_ylim(0, 0.30)
+axes[1].set_ylim(0, 0.35)
 axes[1].legend()
 axes[1].set_title("b)", loc="left")
-'''
+
 plt.tight_layout()
 plt.savefig("plotsCL/fig8CL.png", dpi=300, bbox_inches='tight')
 plt.show()
@@ -407,6 +474,12 @@ kSpiceAbsorberTempEnd_Gas_Out = [[4.230, GetSingleSensorData(
 kSpiceAbsorberTempEnd_Gas_Out_height = [point[0] for point in kSpiceAbsorberTempEnd_Gas_Out]
 kSpiceAbsorberTempEnd_Gas_Out_temp = [point[1] for point in kSpiceAbsorberTempEnd_Gas_Out]
 
+#Calculate RMSE
+fig9aCLRMSE = CalculateRMSE("9aCL", pilotAbsorberTempStart_Pilot_height, pilotAbsorberTempStart_Pilot_temp, kSpiceAbsorberTempStart_height, kSpiceAbsorberTempStart_temp)
+
+#Calculate RMSE
+fig9bCLRMSE = CalculateRMSE("9bCL", pilotAbsorberTempEnd_Pilot_height, pilotAbsorberTempEnd_Pilot_temp, kSpiceAbsorberTempEnd_height, kSpiceAbsorberTempEnd_temp)
+
 # Plot fig9
 fig, axes = plt.subplots(1, 2, figsize=(22, 7))
 
@@ -415,7 +488,7 @@ axes[0].scatter(pilotAbsorberTempStart_Pilot_height, pilotAbsorberTempStart_Pilo
                 marker='o',
                 color='black',
                 facecolors="none",
-                label='Pilot')
+                label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceAbsorberTempStart_height, kSpiceAbsorberTempStart_temp,
                 marker='o',
@@ -427,7 +500,7 @@ axes[0].scatter(pilotAbsorberTempStart_Pilot_Sump_height, pilotAbsorberTempStart
                 marker='s',
                 color='black',
                 facecolors="none",
-                label='Pilot sump')
+                label='Pilot sump - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceAbsorberTempStart_Sump_height, kSpiceAbsorberTempStart_Sump_temp,
                 marker='s',
@@ -439,7 +512,7 @@ axes[0].scatter(pilotAbsorberTempStart_Pilot_Gas_Out_height, pilotAbsorberTempSt
                 marker='v',
                 color='black',
                 facecolors="none",
-                label='Pilot gass ut')
+                label='Pilot gass ut - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceAbsorberTempStart_Gas_Out_height, kSpiceAbsorberTempStart_Gas_Out_temp,
                 marker='v',
@@ -448,7 +521,7 @@ axes[0].scatter(kSpiceAbsorberTempStart_Gas_Out_height, kSpiceAbsorberTempStart_
                 label='K-Spice gass ut - Lukket sløyfe')
 
 axes[0].set_xlabel("Høyde [m]")
-axes[0].set_ylabel("Temperatur i absorber [°C]")
+axes[0].set_ylabel("Temperatur i absorber ved start [°C]")
 axes[0].set_xlim(-0.02, 4.3)
 axes[0].set_ylim(0, 70)
 axes[0].legend()
@@ -459,7 +532,7 @@ axes[1].scatter(pilotAbsorberTempEnd_Pilot_height, pilotAbsorberTempEnd_Pilot_te
                 marker='o',
                 color='black',
                 facecolors="none",
-                label='Pilot')
+                label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceAbsorberTempEnd_height, kSpiceAbsorberTempEnd_temp,
                 marker='o',
@@ -471,7 +544,7 @@ axes[1].scatter(pilotAbsorberTempEnd_Pilot_Sump_height, pilotAbsorberTempEnd_Pil
                 marker='s',
                 color='black',
                 facecolors="none",
-                label='Pilot sump')
+                label='Pilot sump - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceAbsorberTempEnd_Sump_height, kSpiceAbsorberTempEnd_Sump_temp,
                 marker='s',
@@ -483,7 +556,7 @@ axes[1].scatter(pilotAbsorberTempEnd_Pilot_Gas_Out_height, pilotAbsorberTempEnd_
                 marker='v',
                 color='black',
                 facecolors="none",
-                label='Pilot gass ut')
+                label='Pilot gass ut - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceAbsorberTempEnd_Gas_Out_height, kSpiceAbsorberTempEnd_Gas_Out_temp,
                 marker='v',
@@ -492,7 +565,7 @@ axes[1].scatter(kSpiceAbsorberTempEnd_Gas_Out_height, kSpiceAbsorberTempEnd_Gas_
                 label='K-Spice gass ut - Lukket sløyfe')
 
 axes[1].set_xlabel("Høyde [m]")
-axes[1].set_ylabel("Temperatur i absorber [°C]")
+axes[1].set_ylabel("Temperatur i absorber ved slutt [°C]")
 axes[1].set_xlim(-0.02, 4.3)
 axes[1].set_ylim(0, 70)
 axes[1].legend()
@@ -587,6 +660,12 @@ kSpiceDesorberTempEnd_Gas_Out = [[3.56695, GetSingleSensorData(
 kSpiceDesorberTempEnd_Gas_Out_height = [point[0] for point in kSpiceDesorberTempEnd_Gas_Out]
 kSpiceDesorberTempEnd_Gas_Out_temp = [point[1] for point in kSpiceDesorberTempEnd_Gas_Out]
 
+#Calculate RMSE
+fig10aCLRMSE = CalculateRMSE("10aCL", pilotDesorberTempStart_Pilot_height, pilotDesorberTempStart_Pilot_temp, kSpiceDesorberTempStart_height, kSpiceDesorberTempStart_temp)
+
+#Calculate RMSE
+fig10bCLRMSE = CalculateRMSE("10bCL", pilotDesorberTempEnd_Pilot_height, pilotDesorberTempEnd_Pilot_temp, kSpiceDesorberTempEnd_height, kSpiceDesorberTempEnd_temp)
+
 #Plot fig10
 fig, axes = plt.subplots(1, 2, figsize=(22, 7))
 
@@ -595,7 +674,7 @@ axes[0].scatter(pilotDesorberTempStart_Pilot_height, pilotDesorberTempStart_Pilo
                 marker='o',
                 color='black',
                 facecolors="none",
-                label='Pilot')
+                label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceDesorberTempStart_height, kSpiceDesorberTempStart_temp,
                 marker='o',
@@ -607,7 +686,7 @@ axes[0].scatter(pilotDesorberTempStart_Pilot_Reboiler_height, pilotDesorberTempS
                 marker='s',
                 color='black',
                 facecolors="none",
-                label='Pilot reboiler')
+                label='Pilot reboiler - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceDesorberTempStart_Reboiler_height, kSpiceDesorberTempStart_Reboiler_temp,
                 marker='s',
@@ -619,7 +698,7 @@ axes[0].scatter(pilotDesorberTempStart_Pilot_Solvent_In_height, pilotDesorberTem
                 marker='d',
                 color='black',
                 facecolors="none",
-                label='Pilot solvent in')
+                label='Pilot solvent in - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceDesorberTempStart_Solvent_In_height, kSpiceDesorberTempStart_Solvent_In_temp,
                 marker='d',
@@ -631,7 +710,7 @@ axes[0].scatter(pilotDesorberTempStart_Pilot_Gas_Out_height, pilotDesorberTempSt
                 marker='v',
                 color='black',
                 facecolors="none",
-                label='Pilot gass ut')
+                label='Pilot gass ut - Enaasen Flø et al. (2015)')
 
 axes[0].scatter(kSpiceDesorberTempStart_Gas_Out_height, kSpiceDesorberTempStart_Gas_Out_temp,
                 marker='v',
@@ -640,7 +719,7 @@ axes[0].scatter(kSpiceDesorberTempStart_Gas_Out_height, kSpiceDesorberTempStart_
                 label='K-Spice gass ut - Lukket sløyfe')
 
 axes[0].set_xlabel("Høyde [m]")
-axes[0].set_ylabel("Temperatur i desorber [°C]")
+axes[0].set_ylabel("Temperatur i desorber ved start [°C]")
 axes[0].set_xlim(-0.02, 3.6)
 axes[0].set_ylim(70, 125)
 axes[0].legend()
@@ -652,7 +731,7 @@ axes[1].scatter(pilotDesorberTempEnd_Pilot_height, pilotDesorberTempEnd_Pilot_te
                 marker='o',
                 color='black',
                 facecolors="none",
-                label='Pilot')
+                label='Pilot - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceDesorberTempEnd_height, kSpiceDesorberTempEnd_temp,
                 marker='o',
@@ -664,7 +743,7 @@ axes[1].scatter(pilotDesorberTempEnd_Pilot_Reboiler_height, pilotDesorberTempEnd
                 marker='s',
                 color='black',
                 facecolors="none",
-                label='Pilot reboiler')
+                label='Pilot reboiler - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceDesorberTempEnd_Reboiler_height, kSpiceDesorberTempEnd_Reboiler_temp,
                 marker='s',
@@ -676,7 +755,7 @@ axes[1].scatter(pilotDesorberTempEnd_Pilot_Solvent_In_height, pilotDesorberTempE
                 marker='d',
                 color='black',
                 facecolors="none",
-                label='Pilot solvent in')
+                label='Pilot solvent in - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceDesorberTempEnd_Solvent_In_height, kSpiceDesorberTempEnd_Solvent_In_temp,
                 marker='d',
@@ -688,7 +767,7 @@ axes[1].scatter(pilotDesorberTempEnd_Pilot_Gas_Out_height, pilotDesorberTempEnd_
                 marker='v',
                 color='black',
                 facecolors="none",
-                label='Pilot gass ut')
+                label='Pilot gass ut - Enaasen Flø et al. (2015)')
 
 axes[1].scatter(kSpiceDesorberTempEnd_Gas_Out_height, kSpiceDesorberTempEnd_Gas_Out_temp,
                 marker='v',
@@ -697,7 +776,7 @@ axes[1].scatter(kSpiceDesorberTempEnd_Gas_Out_height, kSpiceDesorberTempEnd_Gas_
                 label='K-Spice gass ut - Lukket sløyfe')
 
 axes[1].set_xlabel("Høyde [m]")
-axes[1].set_ylabel("Temperatur i desorber [°C]")
+axes[1].set_ylabel("Temperatur i desorber ved slutt [°C]")
 axes[1].set_xlim(-0.02, 3.6)
 axes[1].set_ylim(70, 125)
 axes[1].legend()
@@ -707,4 +786,65 @@ axes[1].set_title("b)", loc="left")
 plt.tight_layout()
 plt.savefig("plotsCL/fig10CL.png", dpi=300, bbox_inches='tight')
 plt.show()
+
+#%% RMSE/NRMSE summary table for closed loop
+
+rmseSummary = pd.DataFrame({
+    "Figure": [
+        "5",
+        "6",
+        "7a", "7b",
+        "8a", 
+        #"8b",
+        "9a", "9b",
+        "10a", "10b"
+    ],
+
+    "RMSE": [
+        fig5CLRMSE[0],
+
+        fig6CLRMSE[0],
+
+        fig7aCLRMSE[0],
+        fig7bCLRMSE[0],
+
+        fig8aCLRMSE[0],
+        #fig8bCLRMSE[0],
+
+        fig9aCLRMSE[0],
+        fig9bCLRMSE[0],
+
+        fig10aCLRMSE[0],
+        fig10bCLRMSE[0]
+    ],
+
+    "NRMSE [%]": [
+        fig5CLRMSE[1] * 100,
+        
+        fig6CLRMSE[1] * 100,
+
+        fig7aCLRMSE[1] * 100,
+        fig7bCLRMSE[1] * 100,
+
+        fig8aCLRMSE[1] * 100,
+        #fig8bCLRMSE[1] * 100,
+
+        fig9aCLRMSE[1] * 100,
+        fig9bCLRMSE[1] * 100,
+
+        fig10aCLRMSE[1] * 100,
+        fig10bCLRMSE[1] * 100
+    ]
+})
+
+# Rund av tall
+rmseSummary["RMSE"] = rmseSummary["RMSE"].round(4)
+rmseSummary["NRMSE [%]"] = rmseSummary["NRMSE [%]"].round(2)
+
+# Print table
+#print(rmseSummary)
+
+# Save table
+rmseSummary.to_excel("plots/CL_RMSE_summary.xlsx", index=False)
+
 

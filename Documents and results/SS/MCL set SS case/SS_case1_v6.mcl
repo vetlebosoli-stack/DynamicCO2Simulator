@@ -2,7 +2,7 @@
 // CASE 1 v6
 // CONTROLLER SETPOINT CHANGING SCRIPT 
 // ====================================================================
-// This script explicitly sets controller setpoints at script execution.
+// This script explicitly sets controller setpoints and boundry conditions at script execution.
 // ====================================================================
 
 // Gas Flow Rate 00FIC001 / FT06
